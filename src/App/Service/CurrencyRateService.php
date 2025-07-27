@@ -5,103 +5,172 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\CurrencyRepositoryInterface;
+use App\DTO\HistoricalRateDTO;
+use App\DTO\HistoricalRatesCollectionDTO;
 
 class CurrencyRateService
 {
+    public const DEFAULT_HISTORICAL_DAYS = 14;
+
     private CurrencyRepositoryInterface $currencyRepository;
     private ConfigurationService $config;
+    private DateHelperService $dateHelper;
 
     public function __construct(
         CurrencyRepositoryInterface $currencyRepository,
-        ConfigurationService $config
+        ConfigurationService $config,
+        DateHelperService $dateHelper
     ) {
         $this->currencyRepository = $currencyRepository;
         $this->config = $config;
+        $this->dateHelper = $dateHelper;
     }
 
     /**
-     * Get current rates for all supported currencies with buy/sell margins applied
-     * 
-     * @return array Array of currency data with structure:
-     *               [['currency' => 'EUR', 'base' => 4.50, 'buy' => 4.35, 'sell' => 4.61], ...]
+     * Get current rates for all supported currencies with calculated margins
      */
     public function getCurrentRates(): array
     {
-        $baseRates = $this->currencyRepository->getCurrentRates();
+        $nbpRates = $this->currencyRepository->getCurrentRates();
         $result = [];
 
-        foreach ($this->config->getSupportedCurrencies() as $currency) {
-            if (!isset($baseRates[$currency])) {
-                continue; // Skip currencies not available from NBP
+        foreach ($nbpRates as $currency => $baseRate) {
+            if ($this->isCurrencyAvailable($currency)) {
+                $result[$currency] = $this->calculateMarginRates($currency, $baseRate);
             }
-
-            $baseRate = $baseRates[$currency];
-            $currencyData = $this->calculateMarginRates($currency, $baseRate);
-            $result[] = $currencyData;
         }
 
         return $result;
     }
 
     /**
-     * Calculate buy and sell rates with margins applied for specific currency
-     * 
-     * @param string $currency Currency code
-     * @param float $baseRate Base rate from NBP
-     * @return array Array with structure: ['currency' => 'EUR', 'base' => 4.50, 'buy' => 4.35, 'sell' => 4.61]
+     * Calculate buy and sell rates with margins for a specific currency
      */
     public function calculateMarginRates(string $currency, float $baseRate): array
     {
-        if ($baseRate <= 0) {
-            throw new \InvalidArgumentException("Base rate must be positive, got: {$baseRate}");
-        }
-
         $buyMargin = $this->config->getBuyMargin($currency);
         $sellMargin = $this->config->getSellMargin($currency);
 
-        $currencyData = [
+        $result = [
             'currency' => $currency,
             'name' => $this->config->getCurrencyName($currency),
-            'base' => round($baseRate, 4),
-            'buy' => null,
-            'sell' => round($baseRate + $sellMargin, 4)
+            'baseRate' => $baseRate,
+            'sellRate' => $baseRate + $sellMargin,
+            'supportsBuying' => $this->config->supportsBuying($currency)
         ];
 
-        // Only calculate buy rate if currency supports buying
         if ($buyMargin !== null) {
-            $currencyData['buy'] = round($baseRate + $buyMargin, 4);
+            $result['buyRate'] = $baseRate + $buyMargin;
+        } else {
+            $result['buyRate'] = null;
         }
 
-        return $currencyData;
+        return $result;
     }
 
     /**
-     * Get available currencies that have current rates from NBP
-     * 
-     * @return array List of currency codes that are available
+     * Get available currencies that are supported by the kantor
      */
     public function getAvailableCurrencies(): array
     {
-        try {
-            $baseRates = $this->currencyRepository->getCurrentRates();
-            $supportedCurrencies = $this->config->getSupportedCurrencies();
-
-            return array_intersect($supportedCurrencies, array_keys($baseRates));
-        } catch (\Exception $e) {
-            // Return empty array if NBP API is not available
-            return [];
-        }
+        return $this->config->getSupportedCurrencies();
     }
 
     /**
-     * Check if specific currency is supported and available
-     * 
-     * @param string $currency Currency code
-     * @return bool True if currency is supported and has current rate
+     * Check if currency is available for exchange
      */
     public function isCurrencyAvailable(string $currency): bool
     {
-        $availableCurrencies = $this->getAvailableCurrencies();
-        return in_array($currency, $availableCurrencies);
+        return in_array($currency, $this->getAvailableCurrencies());
+    }
+
+    /**
+     * Get historical rates for a specific currency with applied margins (default: 14 days)
+     */
+    public function getHistoricalRates(string $currency, ?\DateTime $referenceDate = null, int $daysCount = self::DEFAULT_HISTORICAL_DAYS): HistoricalRatesCollectionDTO
+    {
+        if ($referenceDate === null) {
+            $referenceDate = new \DateTime();
+        }
+
+        // Validate currency
+        if (!$this->isCurrencyAvailable($currency)) {
+            throw new \InvalidArgumentException("Currency {$currency} is not supported");
+        }
+
+        // Validate date range
+        if (!$this->dateHelper->validateDateRange($referenceDate)) {
+            throw new \InvalidArgumentException("Date {$referenceDate->format('Y-m-d')} is out of valid range (max 1 year back, not future)");
+        }
+
+        // Validate days count
+        if ($daysCount <= 0 || $daysCount > 93) {
+            throw new \InvalidArgumentException("Days count must be between 1 and 93 (NBP API limit), got: {$daysCount}");
+        }
+
+        // Calculate N business days back
+        $dateRange = $this->dateHelper->getBusinessDaysBackRange($referenceDate, $daysCount);
+        $startDate = $dateRange['startDate'];
+        $endDate = $dateRange['endDate'];
+
+        // Get raw historical rates from repository
+        $rawRates = $this->currencyRepository->getLastDaysRates($currency, $referenceDate, $daysCount);
+
+        // Convert to DTO with applied margins
+        $historicalRates = [];
+        foreach ($rawRates as $rateData) {
+            $date = new \DateTime($rateData['date']);
+            $baseRate = $rateData['rate'];
+
+            $buyMargin = $this->config->getBuyMargin($currency);
+            $sellMargin = $this->config->getSellMargin($currency);
+
+            $buyRate = $buyMargin !== null ? $baseRate + $buyMargin : null;
+            $sellRate = $baseRate + $sellMargin;
+
+            $historicalRates[] = new HistoricalRateDTO($date, $baseRate, $buyRate, $sellRate);
+        }
+
+        return new HistoricalRatesCollectionDTO($currency, $startDate, $endDate, $historicalRates);
+    }
+
+    /**
+     * Get historical rates for a specific date range
+     */
+    public function getHistoricalRatesForDateRange(string $currency, \DateTime $fromDate, \DateTime $toDate): HistoricalRatesCollectionDTO
+    {
+        // Validate currency
+        if (!$this->isCurrencyAvailable($currency)) {
+            throw new \InvalidArgumentException("Currency {$currency} is not supported");
+        }
+
+        // Validate date range
+        if (!$this->dateHelper->validateDateRange($fromDate) || !$this->dateHelper->validateDateRange($toDate)) {
+            throw new \InvalidArgumentException("Date range is out of valid range (max 1 year back, not future)");
+        }
+
+        if ($fromDate > $toDate) {
+            throw new \InvalidArgumentException("From date cannot be later than to date");
+        }
+
+        // Get raw historical rates from repository
+        $rawRates = $this->currencyRepository->getHistoricalRates($currency, $fromDate, $toDate);
+
+        // Convert to DTO with applied margins
+        $historicalRates = [];
+        foreach ($rawRates as $rateData) {
+            $date = new \DateTime($rateData['date']);
+            $baseRate = $rateData['rate'];
+
+            $buyMargin = $this->config->getBuyMargin($currency);
+            $sellMargin = $this->config->getSellMargin($currency);
+
+            $buyRate = $buyMargin !== null ? $baseRate + $buyMargin : null;
+            $sellRate = $baseRate + $sellMargin;
+
+            $historicalRates[] = new HistoricalRateDTO($date, $baseRate, $buyRate, $sellRate);
+        }
+
+        return new HistoricalRatesCollectionDTO($currency, $fromDate, $toDate, $historicalRates);
     }
 }

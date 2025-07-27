@@ -162,4 +162,93 @@ class CachedCurrencyRateService
 
         return $stats;
     }
+
+    /**
+     * Get historical rates for a specific currency with caching
+     */
+    public function getHistoricalRates(string $currency, ?\DateTime $referenceDate = null, int $daysCount = CurrencyRateService::DEFAULT_HISTORICAL_DAYS): \App\DTO\HistoricalRatesCollectionDTO
+    {
+        if ($referenceDate === null) {
+            $referenceDate = new \DateTime();
+        }
+
+        $referenceDateStr = $referenceDate->format('Y-m-d');
+        $cacheKey = "historical_rates_{$currency}_{$referenceDateStr}_{$daysCount}";
+
+        try {
+            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currency, $referenceDate, $daysCount) {
+                // TTL is configured at pool level in cache.yaml
+
+                $this->logger->info("Fetching fresh historical rates for {$currency}", [
+                    'referenceDate' => $referenceDate->format('Y-m-d'),
+                    'daysCount' => $daysCount
+                ]);
+
+                $collection = $this->currencyRateService->getHistoricalRates($currency, $referenceDate, $daysCount);
+
+                $this->logger->info("Successfully fetched and cached historical rates for {$currency}", [
+                    'cache_key' => $item->getKey(),
+                    'rates_count' => $collection->getCount(),
+                    'referenceDate' => $referenceDate->format('Y-m-d'),
+                    'daysCount' => $daysCount
+                ]);
+
+                return $collection;
+            });
+
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to get cached historical rates for {$currency}", [
+                'error' => $e->getMessage(),
+                'referenceDate' => $referenceDateStr,
+                'daysCount' => $daysCount,
+                'cache_key' => $cacheKey
+            ]);
+
+            // Fallback to non-cached service
+            return $this->currencyRateService->getHistoricalRates($currency, $referenceDate, $daysCount);
+        }
+    }
+
+    /**
+     * Get historical rates for a specific date range with caching
+     */
+    public function getHistoricalRatesForDateRange(string $currency, \DateTime $fromDate, \DateTime $toDate): \App\DTO\HistoricalRatesCollectionDTO
+    {
+        $fromDateStr = $fromDate->format('Y-m-d');
+        $toDateStr = $toDate->format('Y-m-d');
+        $cacheKey = "historical_rates_range_{$currency}_{$fromDateStr}_{$toDateStr}";
+
+        try {
+            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currency, $fromDate, $toDate, $fromDateStr, $toDateStr) {
+                // TTL is configured at pool level in cache.yaml
+
+                $this->logger->info("Fetching fresh historical rates for {$currency} in date range", [
+                    'fromDate' => $fromDateStr,
+                    'toDate' => $toDateStr
+                ]);
+
+                $collection = $this->currencyRateService->getHistoricalRatesForDateRange($currency, $fromDate, $toDate);
+
+                $this->logger->info("Successfully fetched and cached historical rates for {$currency} in date range", [
+                    'cache_key' => $item->getKey(),
+                    'rates_count' => $collection->getCount(),
+                    'fromDate' => $fromDateStr,
+                    'toDate' => $toDateStr
+                ]);
+
+                return $collection;
+            });
+
+        } catch (\Exception $e) {
+            $this->logger->error("Failed to get cached historical rates for {$currency} in date range", [
+                'error' => $e->getMessage(),
+                'fromDate' => $fromDateStr,
+                'toDate' => $toDateStr,
+                'cache_key' => $cacheKey
+            ]);
+
+            // Fallback to non-cached service
+            return $this->currencyRateService->getHistoricalRatesForDateRange($currency, $fromDate, $toDate);
+        }
+    }
 }

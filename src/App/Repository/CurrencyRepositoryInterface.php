@@ -7,17 +7,22 @@ namespace App\Repository;
 interface CurrencyRepositoryInterface
 {
     /**
-     * Get current exchange rates for all currencies from NBP API
-     * 
-     * @return array Array of currency rates: ['EUR' => 4.50, 'USD' => 4.20, ...]
+     * Get current exchange rates for all currencies
      */
     public function getCurrentRates(): array;
 
     /**
-     * Get current exchange rate for a specific currency from NBP API  
-     * 
-     * @param string $currency Currency code (e.g., 'EUR', 'USD')
-     * @return float|null Exchange rate or null if not found
+     * Get current exchange rate for a specific currency
      */
     public function getCurrentRate(string $currency): ?float;
+
+    /**
+     * Get historical exchange rates for a specific currency within date range
+     */
+    public function getHistoricalRates(string $currency, \DateTime $fromDate, \DateTime $toDate): array;
+
+    /**
+     * Get last N days exchange rates for a specific currency
+     */
+    public function getLastDaysRates(string $currency, \DateTime $referenceDate, int $daysCount): array;
 }

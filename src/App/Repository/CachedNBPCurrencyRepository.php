@@ -235,4 +235,91 @@ class CachedNBPCurrencyRepository implements CurrencyRepositoryInterface
         $this->logger->warning("NBP API: No cached fallback rate available for {$currency}");
         return null;
     }
+
+    /**
+     * Get historical exchange rates for a specific currency within date range with caching
+     * Cache TTL: 24 hours (historical data doesn't change)
+     */
+    public function getHistoricalRates(string $currency, \DateTime $fromDate, \DateTime $toDate): array
+    {
+        $startDateStr = $fromDate->format('Y-m-d');
+        $endDateStr = $toDate->format('Y-m-d');
+        $cacheKey = "nbp_historical_table_{$startDateStr}_{$endDateStr}_{$currency}";
+
+        try {
+            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currency, $fromDate, $toDate, $startDateStr, $endDateStr) {
+                $item->expiresAfter(86400); // 24 hours TTL for historical data
+
+                $this->logger->info("NBP API: Fetching fresh historical data for {$currency} from {$startDateStr} to {$endDateStr}");
+                $rates = $this->repository->getHistoricalRates($currency, $fromDate, $toDate);
+
+                if (empty($rates)) {
+                    throw new \RuntimeException("No historical rates returned from repository for {$currency}");
+                }
+
+                $this->logger->info("NBP API: Successfully fetched and cached historical data for {$currency}", [
+                    'rates_count' => count($rates),
+                    'fromDate' => $startDateStr,
+                    'toDate' => $endDateStr,
+                    'cache_key' => $item->getKey()
+                ]);
+
+                return $rates;
+            });
+
+        } catch (\Exception $e) {
+            $this->logger->error("NBP API: Failed to get cached historical rates for {$currency}", [
+                'error' => $e->getMessage(),
+                'fromDate' => $startDateStr,
+                'toDate' => $endDateStr,
+                'cache_key' => $cacheKey
+            ]);
+
+            // Fallback to non-cached repository
+            return $this->repository->getHistoricalRates($currency, $fromDate, $toDate);
+        }
+    }
+
+    /**
+     * Get last N days exchange rates for a specific currency with caching
+     * Cache TTL: 24 hours (historical data doesn't change)
+     */
+    public function getLastDaysRates(string $currency, \DateTime $referenceDate, int $daysCount): array
+    {
+        $referenceDateStr = $referenceDate->format('Y-m-d');
+        $cacheKey = "nbp_historical_{$currency}_last_{$daysCount}_{$referenceDateStr}";
+
+        try {
+            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($currency, $referenceDate, $referenceDateStr, $daysCount) {
+                $item->expiresAfter(86400); // 24 hours TTL for historical data
+
+                $this->logger->info("NBP API: Fetching fresh last {$daysCount} days data for {$currency} from {$referenceDateStr}");
+                $rates = $this->repository->getLastDaysRates($currency, $referenceDate, $daysCount);
+
+                if (empty($rates)) {
+                    throw new \RuntimeException("No last {$daysCount} days rates returned from repository for {$currency}");
+                }
+
+                $this->logger->info("NBP API: Successfully fetched and cached last {$daysCount} days data for {$currency}", [
+                    'rates_count' => count($rates),
+                    'referenceDate' => $referenceDateStr,
+                    'daysCount' => $daysCount,
+                    'cache_key' => $item->getKey()
+                ]);
+
+                return $rates;
+            });
+
+        } catch (\Exception $e) {
+            $this->logger->error("NBP API: Failed to get cached last {$daysCount} days rates for {$currency}", [
+                'error' => $e->getMessage(),
+                'referenceDate' => $referenceDateStr,
+                'daysCount' => $daysCount,
+                'cache_key' => $cacheKey
+            ]);
+
+            // Fallback to non-cached repository
+            return $this->repository->getLastDaysRates($currency, $referenceDate, $daysCount);
+        }
+    }
 }

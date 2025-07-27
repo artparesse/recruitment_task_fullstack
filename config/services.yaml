@@ -31,6 +31,16 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    # Date helper service for business day calculations
+    App\Service\DateHelperService: ~
+
+    # Currency Rate Service with date helper
+    App\Service\CurrencyRateService:
+        arguments:
+            $currencyRepository: '@App\Repository\CurrencyRepositoryInterface'
+            $config: '@App\Service\ConfigurationService'
+            $dateHelper: '@App\Service\DateHelperService'
+
     # Repository pattern for NBP API
     App\Repository\CurrencyRepositoryInterface:
         alias: App\Repository\CachedNBPCurrencyRepository

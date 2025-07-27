@@ -158,4 +158,186 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
 
         return $result;
     }
+
+    /**
+     * Get historical exchange rates for a specific currency within date range
+     */
+    public function getHistoricalRates(string $currency, \DateTime $fromDate, \DateTime $toDate): array
+    {
+        // Strategy 1: Try tables/A/{startDate}/{endDate} for specific date range
+        try {
+            $startDateStr = $fromDate->format('Y-m-d');
+            $endDateStr = $toDate->format('Y-m-d');
+
+            $url = str_replace(
+                ['{startDate}', '{endDate}'],
+                [$startDateStr, $endDateStr],
+                $this->config->getNbpApiUrl('historical_tables_url')
+            );
+
+            $response = $this->httpClient->get($url, ['timeout' => 10]);
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if ($data && is_array($data) && !empty($data)) {
+                $this->logger->info("NBP API: Successfully fetched historical data for {$currency} from {$startDateStr} to {$endDateStr}");
+                return $this->extractHistoricalRatesFromTables($data, $currency);
+            }
+
+            throw new \RuntimeException("Invalid response for historical tables data");
+
+        } catch (\Exception $e) {
+            $this->logger->warning("NBP API: Historical tables endpoint failed for {$currency}", [
+                'error' => $e->getMessage(),
+                'fromDate' => $fromDate->format('Y-m-d'),
+                'toDate' => $toDate->format('Y-m-d')
+            ]);
+        }
+
+        // Strategy 2: Fallback to single currency historical endpoint
+        try {
+            // Calculate days difference for last/X endpoint
+            $daysDiff = $fromDate->diff($toDate)->days + 1;
+
+            $url = str_replace(
+                ['{currency}', '{count}'],
+                [strtolower($currency), (string) $daysDiff],
+                $this->config->getNbpApiUrl('historical_rates_url')
+            );
+
+            $response = $this->httpClient->get($url, ['timeout' => 10]);
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if ($data && isset($data['rates']) && is_array($data['rates'])) {
+                $this->logger->info("NBP API: Successfully fetched historical rates for {$currency} (single currency fallback)");
+                return $this->extractHistoricalRatesFromSingleCurrency($data['rates']);
+            }
+
+            throw new \RuntimeException("Invalid response for single currency historical data");
+
+        } catch (\Exception $e) {
+            $this->logger->error("NBP API: All historical strategies failed for {$currency}", [
+                'error' => $e->getMessage(),
+                'fromDate' => $fromDate->format('Y-m-d'),
+                'toDate' => $toDate->format('Y-m-d')
+            ]);
+        }
+
+        return [];
+    }
+
+    /**
+     * Get last N days exchange rates for a specific currency
+     */
+    public function getLastDaysRates(string $currency, \DateTime $referenceDate, int $daysCount): array
+    {
+        // Strategy 1: Try tables/A/last/{count} (preferred - automatically skips weekends)
+        try {
+            $url = $this->config->getNbpApiUrl('historical_last_url');
+            $url = str_replace('{count}', (string) $daysCount, $url);
+
+            $response = $this->httpClient->get($url, ['timeout' => 10]);
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if ($data && is_array($data) && !empty($data)) {
+                $this->logger->info("NBP API: Successfully fetched last {$daysCount} days tables for {$currency}");
+                return $this->extractHistoricalRatesFromTables($data, $currency);
+            }
+
+            throw new \RuntimeException("Invalid response for last {$daysCount} days tables");
+
+        } catch (\Exception $e) {
+            $this->logger->warning("NBP API: Last {$daysCount} days tables endpoint failed for {$currency}", [
+                'error' => $e->getMessage(),
+                'referenceDate' => $referenceDate->format('Y-m-d'),
+                'daysCount' => $daysCount
+            ]);
+        }
+
+        // Strategy 2: Fallback to single currency last N days
+        try {
+            $url = str_replace(
+                ['{currency}', '{count}'],
+                [strtolower($currency), (string) $daysCount],
+                $this->config->getNbpApiUrl('historical_rates_url')
+            );
+
+            $response = $this->httpClient->get($url, ['timeout' => 10]);
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if ($data && isset($data['rates']) && is_array($data['rates'])) {
+                $this->logger->info("NBP API: Successfully fetched last {$daysCount} days for {$currency} (single currency fallback)");
+                return $this->extractHistoricalRatesFromSingleCurrency($data['rates']);
+            }
+
+            throw new \RuntimeException("Invalid response for single currency last {$daysCount} days");
+
+        } catch (\Exception $e) {
+            $this->logger->error("NBP API: All last {$daysCount} days strategies failed for {$currency}", [
+                'error' => $e->getMessage(),
+                'referenceDate' => $referenceDate->format('Y-m-d'),
+                'daysCount' => $daysCount
+            ]);
+        }
+
+        return [];
+    }
+
+    /**
+     * Extract historical rates from tables response data
+     */
+    private function extractHistoricalRatesFromTables(array $tablesData, string $currency): array
+    {
+        $rates = [];
+
+        foreach ($tablesData as $table) {
+            if (!isset($table['effectiveDate']) || !isset($table['rates'])) {
+                continue;
+            }
+
+            $date = $table['effectiveDate'];
+
+            foreach ($table['rates'] as $rate) {
+                if ($rate['code'] === $currency) {
+                    $rates[] = [
+                        'date' => $date,
+                        'rate' => (float) $rate['mid']
+                    ];
+                    break;
+                }
+            }
+        }
+
+        // Sort by date ascending
+        usort($rates, function ($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        return $rates;
+    }
+
+    /**
+     * Extract historical rates from single currency response data
+     */
+    private function extractHistoricalRatesFromSingleCurrency(array $ratesData): array
+    {
+        $rates = [];
+
+        foreach ($ratesData as $rate) {
+            if (!isset($rate['effectiveDate']) || !isset($rate['mid'])) {
+                continue;
+            }
+
+            $rates[] = [
+                'date' => $rate['effectiveDate'],
+                'rate' => (float) $rate['mid']
+            ];
+        }
+
+        // Sort by date ascending
+        usort($rates, function ($a, $b) {
+            return strcmp($a['date'], $b['date']);
+        });
+
+        return $rates;
+    }
 }
