@@ -1,12 +1,10 @@
-{# ./templates/default/index.html.twig #}
+{# ./templates/app-root.html.twig #}
 
 {% extends 'base.html.twig' %}
 
- {% block title %} Telemedi Zadanie {% endblock %}
+{% block title %}Kantor Walutowy - Aktualne Kursy{% endblock %}
 
- {% block body %}
-
-     <!-- React Root element -->
-     <div id="root"></div>
-
- {% endblock %}
+{% block body %}
+    <!-- React Application Root -->
+    <div id="app"></div>
+{% endblock %}
