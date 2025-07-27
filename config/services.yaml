@@ -33,7 +33,7 @@ services:
 
     # Repository pattern for NBP API
     App\Repository\CurrencyRepositoryInterface:
-        alias: App\Repository\NBPCurrencyRepository
+        alias: App\Repository\CachedNBPCurrencyRepository
 
     # NBP API HTTP Client - specific for currency data fetching
     app.http_client.nbp:
@@ -46,10 +46,30 @@ services:
                 User-Agent: 'Currency-Exchange-App/1.0'
                 Accept: 'application/json'
 
-    # Explicit dependency injection for NBP Repository
+    # Base NBP Repository (without cache)
     App\Repository\NBPCurrencyRepository:
         arguments:
             $httpClient: '@app.http_client.nbp'
+
+    # Cached NBP Repository with decorator pattern
+    App\Repository\CachedNBPCurrencyRepository:
+        arguments:
+            $repository: '@App\Repository\NBPCurrencyRepository'
+            $nbpApiCache: '@nbp_api.cache'
+
+    # Cached Currency Rate Service with decorator pattern
+    App\Service\CachedCurrencyRateService:
+        arguments:
+            $currencyRateService: '@App\Service\CurrencyRateService'
+            $currencyCache: '@currency.cache'
+
+    # Console Command for cache warmup
+    App\Command\CurrencyWarmupCommand:
+        arguments:
+            $nbpApiCache: '@nbp_api.cache'
+            $currencyCache: '@currency.cache'
+        tags:
+            - { name: 'console.command' }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

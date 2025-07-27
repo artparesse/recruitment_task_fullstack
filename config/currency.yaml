@@ -9,6 +9,20 @@ nbp_api:
   historical_tables_url: "/api/exchangerates/tables/A/{startDate}/{endDate}?format=json"
   historical_rates_url: "/api/exchangerates/rates/A/{currency}/last/{count}?format=json"
 
+# Cache configuration for performance optimization
+cache:
+  ttl:
+    nbp_api: 3600      # 1 hour cache for NBP API responses
+    currency_rates: 3600  # 1 hour cache for calculated currency rates  
+    config: 7200       # 2 hours cache for YAML configuration
+  pools:
+    nbp_api: 'nbp_api.cache'
+    currency: 'currency.cache'
+    config: 'config.cache'
+  fallback:
+    max_days: 3        # Maximum days to look back for cached fallback data
+    strategy: 'graceful'  # graceful degradation when cache miss
+
 currencies:
   EUR: 
     name: "Euro"

@@ -8,29 +8,44 @@ use Symfony\Component\Yaml\Yaml;
 
 class ConfigurationService
 {
-    private array $config;
+    private ?array $config = null;
     private string $configPath;
+    private static ?array $staticCache = null;
 
     public function __construct(string $projectDir)
     {
         $this->configPath = $projectDir . '/config/currency.yaml';
-        $this->loadConfiguration();
     }
 
-    /**
-     * Load configuration from YAML file
+        /**
+     * Load configuration from YAML file with memory caching
+     * Uses static cache to avoid multiple file reads per request
      */
     private function loadConfiguration(): void
     {
+        // Check static cache first (shared across all instances)
+        if (self::$staticCache !== null) {
+            $this->config = self::$staticCache;
+            return;
+        }
+        
+        // Check instance cache
+        if ($this->config !== null) {
+            return;
+        }
+        
         if (!file_exists($this->configPath)) {
             throw new \RuntimeException("Configuration file not found: {$this->configPath}");
         }
-
+        
         $this->config = Yaml::parseFile($this->configPath);
-
+        
         if (!isset($this->config['currencies']) || !isset($this->config['nbp_api'])) {
             throw new \RuntimeException("Invalid configuration format in {$this->configPath}");
         }
+        
+        // Cache in static memory for subsequent instances
+        self::$staticCache = $this->config;
     }
 
     /**
@@ -40,6 +55,7 @@ class ConfigurationService
      */
     public function getSupportedCurrencies(): array
     {
+        $this->loadConfiguration();
         return array_keys($this->config['currencies']);
     }
 
@@ -49,12 +65,13 @@ class ConfigurationService
      * @param string $currency Currency code
      * @return float|null Buy margin in PLN or null if currency doesn't support buying
      */
-    public function getBuyMargin(string $currency): ?float
+        public function getBuyMargin(string $currency): ?float
     {
+        $this->loadConfiguration();
         if (!isset($this->config['currencies'][$currency])) {
             throw new \InvalidArgumentException("Currency {$currency} is not supported");
         }
-
+        
         return $this->config['currencies'][$currency]['buy_margin'];
     }
 
@@ -64,12 +81,13 @@ class ConfigurationService
      * @param string $currency Currency code  
      * @return float Sell margin in PLN
      */
-    public function getSellMargin(string $currency): float
+        public function getSellMargin(string $currency): float
     {
+        $this->loadConfiguration();
         if (!isset($this->config['currencies'][$currency])) {
             throw new \InvalidArgumentException("Currency {$currency} is not supported");
         }
-
+        
         return $this->config['currencies'][$currency]['sell_margin'];
     }
 
@@ -79,12 +97,13 @@ class ConfigurationService
      * @param string $currency Currency code
      * @return string Full currency name
      */
-    public function getCurrencyName(string $currency): string
+        public function getCurrencyName(string $currency): string
     {
+        $this->loadConfiguration();
         if (!isset($this->config['currencies'][$currency])) {
             throw new \InvalidArgumentException("Currency {$currency} is not supported");
         }
-
+        
         return $this->config['currencies'][$currency]['name'];
     }
 
@@ -94,12 +113,13 @@ class ConfigurationService
      * @param string $endpoint Endpoint key from config
      * @return string Complete URL
      */
-    public function getNbpApiUrl(string $endpoint): string
+        public function getNbpApiUrl(string $endpoint): string
     {
+        $this->loadConfiguration();
         if (!isset($this->config['nbp_api'][$endpoint])) {
             throw new \InvalidArgumentException("NBP API endpoint {$endpoint} not found in configuration");
         }
-
+        
         return $this->config['nbp_api'][$endpoint];
     }
 

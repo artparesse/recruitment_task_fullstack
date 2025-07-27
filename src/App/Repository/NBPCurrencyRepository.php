@@ -31,7 +31,7 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
      */
     public function getCurrentRates(): array
     {
-        // Strategy 1: Try tables/A/today endpoint (preferred - today's rates)
+        // Strategy 1: Try tables/A/today endpoint
         try {
             $todayUrl = $this->config->getNbpApiUrl('tables_today_url');
             $response = $this->httpClient->get($todayUrl, ['timeout' => 10]);
@@ -41,14 +41,16 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
                 $this->logger->info('NBP API: Successfully fetched from tables/today endpoint');
                 return $this->extractRatesFromTableResponse($data[0]['rates']);
             }
-        } catch (RequestException $e) {
+
+            throw new \RuntimeException('Invalid response from tables/today endpoint');
+
+        } catch (\Exception $e) {
             $this->logger->warning('NBP API: tables/today endpoint failed', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'error' => $e->getMessage()
             ]);
         }
 
-        // Strategy 2: Fallback to tables/A endpoint (latest available rates)
+        // Strategy 2: Fallback to tables/A endpoint
         try {
             $tablesUrl = $this->config->getNbpApiUrl('tables_url');
             $response = $this->httpClient->get($tablesUrl, ['timeout' => 10]);
@@ -58,25 +60,27 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
                 $this->logger->info('NBP API: Successfully fetched from tables endpoint (fallback)');
                 return $this->extractRatesFromTableResponse($data[0]['rates']);
             }
-        } catch (RequestException $e) {
+
+            throw new \RuntimeException('Invalid response from tables endpoint');
+
+        } catch (\Exception $e) {
             $this->logger->warning('NBP API: tables endpoint failed', [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
+                'error' => $e->getMessage()
             ]);
         }
 
-        // Strategy 3: Last resort - fetch individual currency rates
+        // Strategy 3: Individual rates
         try {
             $this->logger->warning('NBP API: Using individual rates fallback strategy');
             return $this->getCurrentRatesIndividual();
-        } catch (\RuntimeException $e) {
-            $this->logger->error('NBP API: All fallback strategies failed', [
+        } catch (\Exception $e) {
+            $this->logger->error('NBP API: Individual rates strategy failed', [
                 'error' => $e->getMessage()
             ]);
-
-            // Return empty array instead of throwing - let service layer handle gracefully
-            return [];
         }
+
+        $this->logger->error('NBP API: All strategies failed');
+        return [];
     }
 
     /**
@@ -99,14 +103,15 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
                 return (float) $data['rates'][0]['mid'];
             }
 
-        } catch (RequestException $e) {
-            $this->logger->error("NBP API: Failed to fetch rate for {$currency}", [
-                'error' => $e->getMessage(),
-                'code' => $e->getCode()
-            ]);
-        }
+            throw new \RuntimeException("Invalid response for {$currency}");
 
-        return null;
+        } catch (\Exception $e) {
+            $this->logger->error("NBP API: Failed to fetch rate for {$currency}", [
+                'error' => $e->getMessage()
+            ]);
+
+            return null;
+        }
     }
 
     /**

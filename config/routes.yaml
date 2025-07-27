@@ -4,6 +4,11 @@ currency_current:
     controller: App\Controller\CurrencyController::getCurrentRates
     methods: [GET]
 
+currency_health:
+    path: /api/currencies/health
+    controller: App\Controller\CurrencyController::getHealthStatus
+    methods: [GET]
+
 # Legacy endpoints
 setupcheck:
     path: /api/setup-check
