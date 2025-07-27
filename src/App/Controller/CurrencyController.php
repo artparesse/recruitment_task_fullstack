@@ -54,7 +54,10 @@ class CurrencyController extends AbstractController
                 'currencies_count' => count($rates)
             ]);
 
-            return new JsonResponse($rates);
+            return new JsonResponse([
+                'success' => true,
+                'data' => $rates
+            ]);
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to fetch current currency rates', [
@@ -152,7 +155,10 @@ class CurrencyController extends AbstractController
             'checks' => array_keys($healthData['checks'])
         ]);
 
-        return new JsonResponse($healthData, $httpStatus);
+        return new JsonResponse([
+            'success' => $healthData['status'] === 'ok',
+            'data' => $healthData
+        ], $httpStatus);
     }
 
     /**

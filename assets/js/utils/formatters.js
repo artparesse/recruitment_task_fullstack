@@ -81,4 +81,108 @@ export function getCurrencyFlag(code) {
     };
     
     return flags[code] || '💱';
+}
+
+/**
+ * Calculate percentage change between two values
+ * @param {number} current - Current value
+ * @param {number} previous - Previous value
+ * @return {number} Percentage change
+ */
+export function calculateChange(current, previous) {
+    if (!current || !previous || previous === 0) {
+        return 0;
+    }
+    
+    return ((current - previous) / previous) * 100;
+}
+
+/**
+ * Format change value with color coding
+ * @param {number} value - Change value
+ * @return {Object} Formatted change with color info
+ */
+export function formatChange(value) {
+    if (value === null || value === undefined) {
+        return {
+            text: 'N/A',
+            color: 'neutral',
+            sign: ''
+        };
+    }
+    
+    const formattedValue = Math.abs(value).toFixed(2);
+    const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+    const color = value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
+    
+    return {
+        text: `${sign}${formattedValue}%`,
+        color,
+        sign: value > 0 ? '↗' : value < 0 ? '↘' : '→'
+    };
+}
+
+/**
+ * Format date range
+ * @param {string|Date} fromDate - Start date
+ * @param {string|Date} toDate - End date
+ * @return {string} Formatted date range
+ */
+export function formatDateRange(fromDate, toDate) {
+    if (!fromDate || !toDate) return '';
+    
+    const from = formatDate(fromDate);
+    const to = formatDate(toDate);
+    
+    if (from === to) {
+        return from;
+    }
+    
+    return `${from} - ${to}`;
+}
+
+/**
+ * Calculate statistics from historical data
+ * @param {Array} rates - Array of historical rate objects
+ * @return {Object} Statistics object
+ */
+export function calculateHistoricalStats(rates) {
+    if (!rates || rates.length === 0) {
+        return {
+            min: null,
+            max: null,
+            avg: null,
+            trend: null,
+            count: 0
+        };
+    }
+    
+    const baseRates = rates.map(rate => rate.baseRate).filter(rate => rate !== null);
+    
+    if (baseRates.length === 0) {
+        return {
+            min: null,
+            max: null,
+            avg: null,
+            trend: null,
+            count: 0
+        };
+    }
+    
+    const min = Math.min(...baseRates);
+    const max = Math.max(...baseRates);
+    const avg = baseRates.reduce((sum, rate) => sum + rate, 0) / baseRates.length;
+    
+    // Calculate trend (first vs last rate)
+    const firstRate = baseRates[0];
+    const lastRate = baseRates[baseRates.length - 1];
+    const trend = calculateChange(lastRate, firstRate);
+    
+    return {
+        min,
+        max,
+        avg,
+        trend,
+        count: baseRates.length
+    };
 } 

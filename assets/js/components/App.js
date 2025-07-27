@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Header from './Layout/Header';
 import Footer from './Layout/Footer';
 import HomePage from './HomePage';
+import HistoryPage from './HistoryPage';
 import ErrorBoundary from './Common/ErrorBoundary';
 
 /**
@@ -18,14 +19,7 @@ function App() {
                     <main className="main-content">
                         <Switch>
                             <Route exact path="/" component={HomePage} />
-                            <Route path="/history/:currency?" render={() => (
-                                <div className="coming-soon">
-                                    <div className="container">
-                                        <h1>Historia Kursów</h1>
-                                        <p>Ta funkcjonalność będzie dostępna w Task 05</p>
-                                    </div>
-                                </div>
-                            )} />
+                            <Route path="/history/:currency?/:date?" component={HistoryPage} />
                             <Route render={() => (
                                 <div className="not-found">
                                     <div className="container">
