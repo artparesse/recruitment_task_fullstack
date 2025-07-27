@@ -1,0 +1,32 @@
+nbp_api:
+  # Current rates (priority order) - relative paths since base_uri is in HTTP client
+  tables_today_url: "/api/exchangerates/tables/A/today/?format=json"
+  tables_url: "/api/exchangerates/tables/A/?format=json"  
+  rates_url: "/api/exchangerates/rates/A/{currency}?format=json"
+  
+  # Historical data - relative paths
+  historical_last_url: "/api/exchangerates/tables/A/last/{count}?format=json"
+  historical_tables_url: "/api/exchangerates/tables/A/{startDate}/{endDate}?format=json"
+  historical_rates_url: "/api/exchangerates/rates/A/{currency}/last/{count}?format=json"
+
+currencies:
+  EUR: 
+    name: "Euro"
+    buy_margin: -0.15  # kurs kupna = kurs średni NBP - 0.15 PLN
+    sell_margin: 0.11  # kurs sprzedaży = kurs średni NBP + 0.11 PLN
+  USD: 
+    name: "US Dollar"
+    buy_margin: -0.15  # kurs kupna = kurs średni NBP - 0.15 PLN  
+    sell_margin: 0.11  # kurs sprzedaży = kurs średni NBP + 0.11 PLN
+  CZK: 
+    name: "Czech Koruna"
+    buy_margin: null   # kantor nie skupuje tej waluty
+    sell_margin: 0.2   # tylko sprzedaż = kurs średni NBP + 0.2 PLN
+  IDR: 
+    name: "Indonesian Rupiah"
+    buy_margin: null   # kantor nie skupuje tej waluty
+    sell_margin: 0.2   # tylko sprzedaż = kurs średni NBP + 0.2 PLN  
+  BRL: 
+    name: "Brazilian Real"
+    buy_margin: null   # kantor nie skupuje tej waluty
+    sell_margin: 0.2   # tylko sprzedaż = kurs średni NBP + 0.2 PLN 

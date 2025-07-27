@@ -1,13 +1,15 @@
-#home:
-#  path: /
-#  defaults: { _controller: 'AppBundle\Controller\DefaultController::indexAction' }
-#  methods:  GET
-#
+# Currency API endpoints
+currency_current:
+    path: /api/currencies/current
+    controller: App\Controller\CurrencyController::getCurrentRates
+    methods: [GET]
 
+# Legacy endpoints
 setupcheck:
     path: /api/setup-check
     controller: App\Controller\DefaultController::setupCheck
 
+# Default route for frontend (must be last)
 index:
     path: /{wildcard}
     defaults: {
@@ -15,5 +17,4 @@ index:
     }
     requirements:
         wildcard: .*
-    # controller: App\Controller\DefaultController::index
 

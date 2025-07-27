@@ -26,5 +26,30 @@ services:
         autowire: true
         tags: ['controller.service_arguments']
 
+    # Currency Application Services
+    App\Service\ConfigurationService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    # Repository pattern for NBP API
+    App\Repository\CurrencyRepositoryInterface:
+        alias: App\Repository\NBPCurrencyRepository
+
+    # NBP API HTTP Client - specific for currency data fetching
+    app.http_client.nbp:
+        class: GuzzleHttp\Client
+        arguments:
+            - verify: false
+              timeout: 10
+              base_uri: 'https://api.nbp.pl'
+              headers:
+                User-Agent: 'Currency-Exchange-App/1.0'
+                Accept: 'application/json'
+
+    # Explicit dependency injection for NBP Repository
+    App\Repository\NBPCurrencyRepository:
+        arguments:
+            $httpClient: '@app.http_client.nbp'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
