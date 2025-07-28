@@ -100,7 +100,7 @@ class CurrencyRateService
 
         // Validate date range
         if (!$this->dateHelper->validateDateRange($referenceDate)) {
-            throw new \InvalidArgumentException("Date {$referenceDate->format('Y-m-d')} is out of valid range (max 1 year back, not future)");
+            throw new \InvalidArgumentException("Date {$referenceDate->format('Y-m-d')} is out of valid range (from 2002-01-02, not future)");
         }
 
         // Validate days count
@@ -146,7 +146,7 @@ class CurrencyRateService
 
         // Validate date range
         if (!$this->dateHelper->validateDateRange($fromDate) || !$this->dateHelper->validateDateRange($toDate)) {
-            throw new \InvalidArgumentException("Date range is out of valid range (max 1 year back, not future)");
+            throw new \InvalidArgumentException("Date range is out of valid range (from 2002-01-02, not future)");
         }
 
         if ($fromDate > $toDate) {

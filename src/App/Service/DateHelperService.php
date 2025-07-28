@@ -95,15 +95,15 @@ class DateHelperService
     public function validateDateRange(\DateTime $date): bool
     {
         $now = new \DateTime();
-        $oneYearAgo = (clone $now)->modify('-1 year');
+        $nbpDataStart = new \DateTime('2002-01-02'); // NBP API data availability start
 
         // Date cannot be in the future
         if ($date > $now) {
             return false;
         }
 
-        // Date cannot be older than 1 year
-        if ($date < $oneYearAgo) {
+        // Date cannot be older than NBP API data availability start
+        if ($date < $nbpDataStart) {
             return false;
         }
 

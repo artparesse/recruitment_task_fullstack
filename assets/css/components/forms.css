@@ -193,6 +193,8 @@
     padding: 1rem;
     border-radius: 6px;
     margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
 }
 
 .error-message.error {

@@ -255,6 +255,24 @@ class CurrencyController extends AbstractController
                 ], Response::HTTP_BAD_REQUEST);
             }
 
+            // Validate date range (from 2002-01-02, not future)
+            $now = new \DateTime();
+            $nbpDataStart = new \DateTime('2002-01-02');
+
+            if ($referenceDate > $now) {
+                return new JsonResponse([
+                    'error' => 'Invalid date',
+                    'message' => "Date '{$date}' is in the future. Please select a date from the past."
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($referenceDate < $nbpDataStart) {
+                return new JsonResponse([
+                    'error' => 'Invalid date',
+                    'message' => "Date '{$date}' is too old. NBP API data is available from 2002-01-02."
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             // Get days count from query parameter (default: 14)
             $daysCount = (int) $request->query->get('days', CurrencyRateService::DEFAULT_HISTORICAL_DAYS);
 

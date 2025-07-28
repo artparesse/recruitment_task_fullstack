@@ -17,10 +17,8 @@ function DatePicker({
     // Set max date to today if not provided
     const maxDate = max || new Date().toISOString().split('T')[0];
     
-    // Set min date to 1 year back
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 1);
-    const minDateString = minDate.toISOString().split('T')[0];
+    // Set min date to 2002-01-02 (NBP API data availability start)
+    const minDateString = '2002-01-02';
 
     const handleChange = (event) => {
         const newDate = event.target.value;
@@ -49,7 +47,7 @@ function DatePicker({
             
             <div className="date-help">
                 <small>
-                    Wybierz datę z ostatniego roku (maksymalnie dzisiaj)
+                    Wybierz datę od 2 stycznia 2002 (maksymalnie dzisiaj)
                 </small>
             </div>
         </div>

@@ -226,53 +226,99 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
     }
 
     /**
-     * Get last N days exchange rates for a specific currency
+     * Get historical exchange rates for a specific currency (N days from reference date)
      */
     public function getLastDaysRates(string $currency, \DateTime $referenceDate, int $daysCount): array
     {
-        // Strategy 1: Try tables/A/last/{count} (preferred - automatically skips weekends)
+        // Strategy 1: Try to get data for specific date range using tables endpoint
         try {
-            $url = $this->config->getNbpApiUrl('historical_last_url');
-            $url = str_replace('{count}', (string) $daysCount, $url);
+            // Calculate date range: N business days back from reference date
+            $endDate = clone $referenceDate;
+            $startDate = clone $referenceDate;
+            $startDate->modify("-{$daysCount} days"); // Approximate, will be adjusted by NBP API
+
+            $startDateStr = $startDate->format('Y-m-d');
+            $endDateStr = $endDate->format('Y-m-d');
+
+            $url = str_replace(
+                ['{startDate}', '{endDate}'],
+                [$startDateStr, $endDateStr],
+                $this->config->getNbpApiUrl('historical_tables_url')
+            );
 
             $response = $this->httpClient->get($url, ['timeout' => 10]);
             $data = json_decode($response->getBody()->getContents(), true);
 
             if ($data && is_array($data) && !empty($data)) {
-                $this->logger->info("NBP API: Successfully fetched last {$daysCount} days tables for {$currency}");
-                return $this->extractHistoricalRatesFromTables($data, $currency);
+                $this->logger->info("NBP API: Successfully fetched tables for date range {$startDateStr} to {$endDateStr} for {$currency}");
+                $rates = $this->extractHistoricalRatesFromTables($data, $currency);
+
+                // Filter to get only N days from reference date
+                $filteredRates = $this->filterRatesByDateRange($rates, $referenceDate, $daysCount);
+                return $filteredRates;
             }
 
-            throw new \RuntimeException("Invalid response for last {$daysCount} days tables");
+            throw new \RuntimeException("Invalid response for date range {$startDateStr} to {$endDateStr}");
 
         } catch (\Exception $e) {
-            $this->logger->warning("NBP API: Last {$daysCount} days tables endpoint failed for {$currency}", [
+            $this->logger->warning("NBP API: Date range tables endpoint failed for {$currency}", [
                 'error' => $e->getMessage(),
                 'referenceDate' => $referenceDate->format('Y-m-d'),
                 'daysCount' => $daysCount
             ]);
         }
 
-        // Strategy 2: Fallback to single currency last N days
+        // Strategy 2: Fallback to individual date queries for each day
         try {
-            $url = str_replace(
-                ['{currency}', '{count}'],
-                [strtolower($currency), (string) $daysCount],
-                $this->config->getNbpApiUrl('historical_rates_url')
-            );
+            $rates = [];
+            $currentDate = clone $referenceDate;
 
-            $response = $this->httpClient->get($url, ['timeout' => 10]);
-            $data = json_decode($response->getBody()->getContents(), true);
+            // Get rates for each day going back
+            for ($i = 0; $i < $daysCount; $i++) {
+                $dateStr = $currentDate->format('Y-m-d');
 
-            if ($data && isset($data['rates']) && is_array($data['rates'])) {
-                $this->logger->info("NBP API: Successfully fetched last {$daysCount} days for {$currency} (single currency fallback)");
-                return $this->extractHistoricalRatesFromSingleCurrency($data['rates']);
+                $url = str_replace(
+                    ['{currency}', '{date}'],
+                    [strtolower($currency), $dateStr],
+                    $this->config->getNbpApiUrl('historical_rate_date_url')
+                );
+
+                try {
+                    $response = $this->httpClient->get($url, ['timeout' => 5]);
+                    $data = json_decode($response->getBody()->getContents(), true);
+
+                    if ($data && isset($data['rates'][0]['mid'])) {
+                        $rates[] = [
+                            'date' => $dateStr,
+                            'rate' => (float) $data['rates'][0]['mid']
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Skip this date if no data available
+                    $this->logger->debug("NBP API: No data for {$currency} on {$dateStr}");
+                }
+
+                $currentDate->modify('-1 day');
             }
 
-            throw new \RuntimeException("Invalid response for single currency last {$daysCount} days");
+            if (!empty($rates)) {
+                $this->logger->info("NBP API: Successfully fetched individual dates for {$currency}", [
+                    'rates_count' => count($rates),
+                    'referenceDate' => $referenceDate->format('Y-m-d')
+                ]);
+
+                // Sort by date ascending
+                usort($rates, function ($a, $b) {
+                    return strcmp($a['date'], $b['date']);
+                });
+
+                return $rates;
+            }
+
+            throw new \RuntimeException("No data found for {$currency} in date range");
 
         } catch (\Exception $e) {
-            $this->logger->error("NBP API: All last {$daysCount} days strategies failed for {$currency}", [
+            $this->logger->error("NBP API: All strategies failed for {$currency}", [
                 'error' => $e->getMessage(),
                 'referenceDate' => $referenceDate->format('Y-m-d'),
                 'daysCount' => $daysCount
@@ -339,5 +385,19 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
         });
 
         return $rates;
+    }
+
+    /**
+     * Filter historical rates to include only the specified number of days from the reference date
+     */
+    private function filterRatesByDateRange(array $rates, \DateTime $referenceDate, int $daysCount): array
+    {
+        // Sort rates by date descending (newest first)
+        usort($rates, function ($a, $b) {
+            return strcmp($b['date'], $a['date']);
+        });
+
+        // Take only the first N rates (closest to reference date)
+        return array_slice($rates, 0, $daysCount);
     }
 }

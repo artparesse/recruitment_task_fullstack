@@ -8,6 +8,7 @@ nbp_api:
   historical_last_url: "/api/exchangerates/tables/A/last/{count}?format=json"
   historical_tables_url: "/api/exchangerates/tables/A/{startDate}/{endDate}?format=json"
   historical_rates_url: "/api/exchangerates/rates/A/{currency}/last/{count}?format=json"
+  historical_rate_date_url: "/api/exchangerates/rates/A/{currency}/{date}?format=json"
 
 # Cache configuration for performance optimization
 cache:
