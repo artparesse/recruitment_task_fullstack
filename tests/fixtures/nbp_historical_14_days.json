@@ -1,0 +1,450 @@
+[
+  {
+    "table": "A",
+    "no": "014/A/NBP/2024",
+    "effectiveDate": "2024-01-15",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 4.0234
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.3421
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1876
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002612
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8234
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "013/A/NBP/2024",
+    "effectiveDate": "2024-01-12",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 4.0145
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.3298
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1867
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002598
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8198
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "012/A/NBP/2024",
+    "effectiveDate": "2024-01-11",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 4.0089
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.3187
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1859
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002589
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8176
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "011/A/NBP/2024",
+    "effectiveDate": "2024-01-10",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9998
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.3098
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1851
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002575
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8154
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "010/A/NBP/2024",
+    "effectiveDate": "2024-01-09",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9912
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2987
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1843
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002567
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8132
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "009/A/NBP/2024",
+    "effectiveDate": "2024-01-08",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9856
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2876
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1835
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002558
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8098
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "008/A/NBP/2024",
+    "effectiveDate": "2024-01-05",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9789
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2765
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1827
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002549
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8076
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "007/A/NBP/2024",
+    "effectiveDate": "2024-01-04",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9723
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2654
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1819
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002541
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8054
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "006/A/NBP/2024",
+    "effectiveDate": "2024-01-03",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9667
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2543
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1811
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002532
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8032
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "005/A/NBP/2024",
+    "effectiveDate": "2024-01-02",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9612
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2432
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1803
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002524
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.8010
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "004/A/NBP/2023",
+    "effectiveDate": "2023-12-29",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9556
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2321
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1795
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002515
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.7988
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "003/A/NBP/2023",
+    "effectiveDate": "2023-12-28",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9501
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2210
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1787
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002507
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.7966
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "002/A/NBP/2023",
+    "effectiveDate": "2023-12-27",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9445
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.2099
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1779
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002498
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.7944
+      }
+    ]
+  },
+  {
+    "table": "A",
+    "no": "001/A/NBP/2023",
+    "effectiveDate": "2023-12-22",
+    "rates": [
+      {
+        "currency": "dolar amerykański",
+        "code": "USD",
+        "mid": 3.9389
+      },
+      {
+        "currency": "euro",
+        "code": "EUR",
+        "mid": 4.1988
+      },
+      {
+        "currency": "korona czeska",
+        "code": "CZK",
+        "mid": 0.1771
+      },
+      {
+        "currency": "rupia indonezyjska",
+        "code": "IDR",
+        "mid": 0.0002490
+      },
+      {
+        "currency": "real (Brazylia)",
+        "code": "BRL",
+        "mid": 0.7922
+      }
+    ]
+  }
+] 
