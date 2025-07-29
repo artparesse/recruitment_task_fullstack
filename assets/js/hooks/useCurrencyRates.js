@@ -46,12 +46,12 @@ export function useCurrencyRates(options = {}) {
             }
 
         } catch (error) {
-            console.error('Failed to fetch currency rates:', error);
+            console.error('Nie udało się pobrać kursów walut:', error);
             
             setState(prev => ({
                 ...prev,
                 loading: false,
-                error: error.message || 'Failed to fetch currency rates'
+                error: error.message || 'Nie udało się pobrać kursów walut'
             }));
 
             // Try to load from cache if available
@@ -80,7 +80,7 @@ export function useCurrencyRates(options = {}) {
                 }
             }
         } catch (error) {
-            console.warn('Failed to load from cache:', error);
+            console.warn('Nie udało się załadować z pamięci podręcznej:', error);
         }
         return false;
     }, [refreshInterval]);

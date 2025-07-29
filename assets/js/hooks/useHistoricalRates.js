@@ -31,7 +31,7 @@ export function useHistoricalRates(currency, date = null, days = 14) {
             setState({
                 data: null,
                 loading: false,
-                error: 'Currency code is required',
+                error: 'Kod waluty jest wymagany',
                 lastUpdated: null
             });
             return;
@@ -59,12 +59,12 @@ export function useHistoricalRates(currency, date = null, days = 14) {
             }
 
         } catch (error) {
-            console.error('Failed to fetch historical rates:', error);
+            console.error('Nie udało się pobrać danych historycznych:', error);
             
             setState(prev => ({
                 ...prev,
                 loading: false,
-                error: error.message || 'Failed to fetch historical rates'
+                error: error.message || 'Nie udało się pobrać danych historycznych'
             }));
 
             // Try to load from cache if available
@@ -96,7 +96,7 @@ export function useHistoricalRates(currency, date = null, days = 14) {
                 }
             }
         } catch (error) {
-            console.warn('Failed to load historical data from cache:', error);
+            console.warn('Nie udało się załadować danych historycznych z pamięci podręcznej:', error);
         }
         return false;
     }, [getCacheKey]);

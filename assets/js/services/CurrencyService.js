@@ -37,7 +37,7 @@ class CurrencyService {
             const response = await this.api.get('/api/currencies/current');
             return response.data;
         } catch (error) {
-            throw new Error(`Failed to fetch current rates: ${error.message}`);
+            throw new Error(`Nie udało się pobrać aktualnych kursów: ${error.message}`);
         }
     }
 
@@ -50,7 +50,7 @@ class CurrencyService {
      */
     async getHistoricalRates(currency, date = null, days = 14) {
         if (!currency) {
-            throw new Error('Currency code is required');
+            throw new Error('Kod waluty jest wymagany');
         }
 
         try {
@@ -72,7 +72,7 @@ class CurrencyService {
             const response = await this.api.get(url);
             return response.data;
         } catch (error) {
-            throw new Error(`Failed to fetch historical rates for ${currency}: ${error.message}`);
+            throw new Error(`Nie udało się pobrać historycznych kursów dla ${currency}: ${error.message}`);
         }
     }
 
@@ -85,7 +85,7 @@ class CurrencyService {
             const response = await this.api.get('/api/currencies/health');
             return response.data;
         } catch (error) {
-            throw new Error(`Failed to fetch health status: ${error.message}`);
+            throw new Error(`Nie udało się sprawdzić statusu serwisu: ${error.message}`);
         }
     }
 
@@ -99,21 +99,21 @@ class CurrencyService {
             // Server responded with error status
             const { status, data } = error.response;
             return {
-                message: data.message || data.error || 'Server error',
+                message: data.message || data.error || 'Błąd serwera',
                 status: status,
                 data: data
             };
         } else if (error.request) {
             // Request was made but no response received
             return {
-                message: 'Network error - please check your connection',
+                message: 'Błąd sieci - sprawdź połączenie internetowe',
                 status: 0,
                 data: null
             };
         } else {
             // Something else happened
             return {
-                message: error.message || 'An unexpected error occurred',
+                message: error.message || 'Wystąpił nieoczekiwany błąd',
                 status: 0,
                 data: null
             };
@@ -132,7 +132,7 @@ class CurrencyService {
             return await fn();
         } catch (error) {
             if (retries > 0) {
-                console.warn(`Request failed, retrying in ${delay}ms. Retries left: ${retries}`);
+                console.warn(`Żądanie nie powiodło się, ponowna próba za ${delay}ms. Pozostałe próby: ${retries}`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 return this.retry(fn, retries - 1, delay * 2);
             }

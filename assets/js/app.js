@@ -20,6 +20,6 @@ const rootElement = document.getElementById('app');
 if (rootElement) {
     ReactDOM.render(<App />, rootElement);
 } else {
-    console.error('Could not find element with id "app" to mount React application');
+    console.error('Nie można znaleźć elementu o id "app" do zamontowania aplikacji React');
 }
 
