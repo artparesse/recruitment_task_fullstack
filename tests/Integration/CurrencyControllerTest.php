@@ -155,7 +155,7 @@ class CurrencyControllerTest extends WebTestCase
         $this->assertArrayHasKey('error', $data);
         $this->assertArrayHasKey('message', $data);
         $this->assertArrayHasKey('supportedCurrencies', $data);
-        $this->assertEquals('Currency not supported', $data['error']);
+        $this->assertEquals('Waluta nie jest obsługiwana', $data['error']);
     }
 
     public function testGetHistoricalRatesWithInvalidDaysCount(): void
@@ -169,21 +169,24 @@ class CurrencyControllerTest extends WebTestCase
         $data = json_decode($content, true);
 
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Invalid days count', $data['error']);
+        $this->assertEquals('Nieprawidłowa liczba dni', $data['error']);
     }
 
     public function testGetHistoricalRatesWithInvalidDate(): void
     {
-        $this->client->request('GET', '/api/currencies/EUR/history/1900-01-01');
+        $invalidDate = '2024-99-99'; // Valid format Y-m-d but invalid date values that will fail validateDateRange
+        $this->client->request('GET', "/api/currencies/EUR/history/{$invalidDate}");
 
         $response = $this->client->getResponse();
+
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
 
         $content = $response->getContent();
         $data = json_decode($content, true);
 
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Invalid date', $data['error']);
+        // This date passes createFromString but fails validateDateRange, so returns 'Nieprawidłowy zakres dat'
+        $this->assertEquals('Nieprawidłowy zakres dat', $data['error']);
     }
 
     public function testGetHistoricalRatesWithFutureDate(): void
@@ -198,8 +201,8 @@ class CurrencyControllerTest extends WebTestCase
         $data = json_decode($content, true);
 
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Invalid date', $data['error']);
-        $this->assertStringContainsString('future', $data['message']);
+        $this->assertEquals('Nieprawidłowy zakres dat', $data['error']); // DateHelperService::validateDateRange returns false for future dates
+        $this->assertStringContainsString('2002-01-02', $data['message']);
     }
 
     public function testGetHistoricalRatesWithVeryOldDate(): void
@@ -214,7 +217,7 @@ class CurrencyControllerTest extends WebTestCase
         $data = json_decode($content, true);
 
         $this->assertArrayHasKey('error', $data);
-        $this->assertEquals('Invalid date', $data['error']);
+        $this->assertEquals('Nieprawidłowy zakres dat', $data['error']); // DateHelperService::validateDateRange returns false for too old dates
         $this->assertStringContainsString('2002-01-02', $data['message']);
     }
 

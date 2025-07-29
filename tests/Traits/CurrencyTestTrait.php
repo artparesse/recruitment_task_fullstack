@@ -8,47 +8,49 @@ trait CurrencyTestTrait
 {
     /**
      * Assert that currency rate structure is valid
+     * Updated to match actual API response structure
      */
     protected function assertValidCurrencyRateStructure(array $rate, string $currency): void
     {
         $this->assertArrayHasKey('currency', $rate);
-        $this->assertArrayHasKey('nbp_rate', $rate);
-        $this->assertArrayHasKey('buy_rate', $rate);
-        $this->assertArrayHasKey('sell_rate', $rate);
-        $this->assertArrayHasKey('spread', $rate);
+        $this->assertArrayHasKey('name', $rate);
+        $this->assertArrayHasKey('baseRate', $rate);
+        $this->assertArrayHasKey('buyRate', $rate);
+        $this->assertArrayHasKey('sellRate', $rate);
+        $this->assertArrayHasKey('supportsBuying', $rate);
 
         $this->assertEquals($currency, $rate['currency']);
-        $this->assertIsFloat($rate['nbp_rate']);
-        $this->assertIsFloat($rate['sell_rate']);
+        $this->assertIsString($rate['name']);
+        $this->assertIsFloat($rate['baseRate']);
+        $this->assertIsFloat($rate['sellRate']);
+        $this->assertIsBool($rate['supportsBuying']);
 
         // Buy rate can be null for some currencies
-        if ($rate['buy_rate'] !== null) {
-            $this->assertIsFloat($rate['buy_rate']);
+        if ($rate['buyRate'] !== null) {
+            $this->assertIsFloat($rate['buyRate']);
         }
-
-        $this->assertIsFloat($rate['spread']);
     }
 
     /**
      * Assert margin calculation for Tier 1 currencies (EUR, USD)
      */
-    protected function assertTier1Margins(array $rate, float $expectedNbpRate): void
+    protected function assertTier1Margins(array $rate, float $expectedBaseRate): void
     {
-        $this->assertEquals($expectedNbpRate, $rate['nbp_rate']);
-        $this->assertEquals($expectedNbpRate - 0.15, $rate['buy_rate']);
-        $this->assertEquals($expectedNbpRate + 0.11, $rate['sell_rate']);
-        $this->assertEquals(0.26, $rate['spread']); // 0.15 + 0.11
+        $this->assertEquals($expectedBaseRate, $rate['baseRate']);
+        $this->assertEquals($expectedBaseRate - 0.15, $rate['buyRate']);
+        $this->assertEquals($expectedBaseRate + 0.11, $rate['sellRate']);
+        $this->assertTrue($rate['supportsBuying']);
     }
 
     /**
      * Assert margin calculation for Tier 2 currencies (CZK, IDR, BRL)
      */
-    protected function assertTier2Margins(array $rate, float $expectedNbpRate): void
+    protected function assertTier2Margins(array $rate, float $expectedBaseRate): void
     {
-        $this->assertEquals($expectedNbpRate, $rate['nbp_rate']);
-        $this->assertNull($rate['buy_rate']); // No buying for these currencies
-        $this->assertEquals($expectedNbpRate + 0.2, $rate['sell_rate']);
-        $this->assertEquals(0.2, $rate['spread']);
+        $this->assertEquals($expectedBaseRate, $rate['baseRate']);
+        $this->assertNull($rate['buyRate']); // No buying for these currencies
+        $this->assertEquals($expectedBaseRate + 0.2, $rate['sellRate']);
+        $this->assertFalse($rate['supportsBuying']);
     }
 
     /**

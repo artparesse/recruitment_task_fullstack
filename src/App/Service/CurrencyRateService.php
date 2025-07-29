@@ -108,19 +108,25 @@ class CurrencyRateService
             throw new \InvalidArgumentException("Days count must be between 1 and 93 (NBP API limit), got: {$daysCount}");
         }
 
-        // Calculate N business days back
-        $dateRange = $this->dateHelper->getBusinessDaysBackRange($referenceDate, $daysCount);
-        $startDate = $dateRange['startDate'];
-        $endDate = $dateRange['endDate'];
-
-        // Get raw historical rates from repository
+        // NBP API /last/{count} automatically excludes weekends - no need for manual calculation
         $rawRates = $this->currencyRepository->getLastDaysRates($currency, $referenceDate, $daysCount);
 
         // Convert to DTO with applied margins
         $historicalRates = [];
+        $actualStartDate = null;
+        $actualEndDate = null;
+
         foreach ($rawRates as $rateData) {
             $date = new \DateTime($rateData['date']);
             $baseRate = $rateData['rate'];
+
+            // Track actual date range from NBP API response
+            if ($actualStartDate === null || $date < $actualStartDate) {
+                $actualStartDate = $date;
+            }
+            if ($actualEndDate === null || $date > $actualEndDate) {
+                $actualEndDate = $date;
+            }
 
             $buyMargin = $this->config->getBuyMargin($currency);
             $sellMargin = $this->config->getSellMargin($currency);
@@ -130,6 +136,10 @@ class CurrencyRateService
 
             $historicalRates[] = new HistoricalRateDTO($date, $baseRate, $buyRate, $sellRate);
         }
+
+        // Use actual dates from NBP API response (they already exclude weekends)
+        $startDate = $actualStartDate ?? $referenceDate;
+        $endDate = $actualEndDate ?? $referenceDate;
 
         return new HistoricalRatesCollectionDTO($currency, $startDate, $endDate, $historicalRates);
     }

@@ -49,6 +49,11 @@ class DateHelperService
 
     /**
      * Calculate date range for N business days back from reference date
+     * 
+     * @deprecated This method is redundant when using NBP API.
+     * NBP API /last/{count} endpoints automatically exclude weekends,
+     * so manual business days calculation is not needed.
+     * Kept for testing purposes only.
      */
     public function getBusinessDaysBackRange(\DateTime $referenceDate, int $daysCount): array
     {

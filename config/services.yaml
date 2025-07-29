@@ -45,13 +45,12 @@ services:
     App\Repository\CurrencyRepositoryInterface:
         alias: App\Repository\CachedNBPCurrencyRepository
 
-    # NBP API HTTP Client - specific for currency data fetching
+    # NBP API HTTP Client - simplified configuration (no base_uri needed)
     app.http_client.nbp:
         class: GuzzleHttp\Client
         arguments:
             - verify: false
               timeout: 10
-              base_uri: 'https://api.nbp.pl'
               headers:
                 User-Agent: 'Currency-Exchange-App/1.0'
                 Accept: 'application/json'
@@ -67,17 +66,15 @@ services:
             $repository: '@App\Repository\NBPCurrencyRepository'
             $nbpApiCache: '@nbp_api.cache'
 
-    # Cached Currency Rate Service with decorator pattern
-    App\Service\CachedCurrencyRateService:
-        arguments:
-            $currencyRateService: '@App\Service\CurrencyRateService'
-            $currencyCache: '@currency.cache'
+    # REMOVED: Cached Currency Rate Service - simplified architecture
+    # Now using only Repository-level caching for better performance
 
-    # Console Command for cache warmup
+    # Console Command for cache warmup (simplified)
     App\Command\CurrencyWarmupCommand:
         arguments:
+            $currencyService: '@App\Service\CurrencyRateService'
+            $config: '@App\Service\ConfigurationService'
             $nbpApiCache: '@nbp_api.cache'
-            $currencyCache: '@currency.cache'
         tags:
             - { name: 'console.command' }
 

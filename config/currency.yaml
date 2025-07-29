@@ -1,14 +1,14 @@
 nbp_api:
-  # Current rates (priority order) - relative paths since base_uri is in HTTP client
-  tables_today_url: "/api/exchangerates/tables/A/today/?format=json"
-  tables_url: "/api/exchangerates/tables/A/?format=json"  
-  rates_url: "/api/exchangerates/rates/A/{currency}?format=json"
+  # Current rates (priority order) - absolute URLs for consistency
+  tables_today_url: "https://api.nbp.pl/api/exchangerates/tables/A/today/?format=json"
+  tables_url: "https://api.nbp.pl/api/exchangerates/tables/A/?format=json"  
+  rates_url: "https://api.nbp.pl/api/exchangerates/rates/A/{currency}?format=json"
   
-  # Historical data - relative paths
-  historical_last_url: "/api/exchangerates/tables/A/last/{count}?format=json"
-  historical_tables_url: "/api/exchangerates/tables/A/{startDate}/{endDate}?format=json"
-  historical_rates_url: "/api/exchangerates/rates/A/{currency}/last/{count}?format=json"
-  historical_rate_date_url: "/api/exchangerates/rates/A/{currency}/{date}?format=json"
+  # Historical data - absolute URLs for reliability
+  historical_last_url: "https://api.nbp.pl/api/exchangerates/tables/A/last/{count}?format=json"
+  historical_tables_url: "https://api.nbp.pl/api/exchangerates/tables/A/{startDate}/{endDate}?format=json"
+  historical_rates_url: "https://api.nbp.pl/api/exchangerates/rates/A/{currency}/last/{count}?format=json"
+  historical_rate_date_url: "https://api.nbp.pl/api/exchangerates/rates/A/{currency}/{date}?format=json"
 
 # Cache configuration for performance optimization
 cache:

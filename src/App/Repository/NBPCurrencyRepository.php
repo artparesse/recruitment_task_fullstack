@@ -79,8 +79,8 @@ class NBPCurrencyRepository implements CurrencyRepositoryInterface
             ]);
         }
 
-        $this->logger->error('NBP API: All strategies failed');
-        return [];
+        $this->logger->critical('NBP API: All strategies failed - throwing exception for graceful handling');
+        throw new \RuntimeException('NBP API completely unavailable - all fallback strategies exhausted');
     }
 
     /**

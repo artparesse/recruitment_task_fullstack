@@ -109,10 +109,11 @@ class NBPCurrencyRepositoryTest extends TestCase
         $httpClient = MockNBPApiClient::createCompletelyFailingClient();
         $this->repository = new NBPCurrencyRepository($httpClient, $this->mockConfig, $this->mockLogger);
 
-        $result = $this->repository->getCurrentRates();
+        // After optimization: complete failure now throws exception for graceful handling
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('NBP API completely unavailable - all fallback strategies exhausted');
 
-        $this->assertIsArray($result);
-        $this->assertEmpty($result);
+        $this->repository->getCurrentRates();
     }
 
     public function testGetHistoricalRatesWithDateRange(): void
@@ -188,10 +189,13 @@ class NBPCurrencyRepositoryTest extends TestCase
         $httpClient = MockNBPApiClient::createCompletelyFailingClient();
 
         $this->mockLogger->expects($this->atLeastOnce())
-            ->method('error')
-            ->with($this->stringContains('failed'));
+            ->method('critical')
+            ->with($this->stringContains('All strategies failed'));
 
         $this->repository = new NBPCurrencyRepository($httpClient, $this->mockConfig, $this->mockLogger);
+        
+        // After optimization: complete failure now throws exception
+        $this->expectException(\RuntimeException::class);
         $this->repository->getCurrentRates();
     }
 
@@ -248,14 +252,15 @@ class NBPCurrencyRepositoryTest extends TestCase
     {
         $httpClient = MockNBPApiClient::createCompletelyFailingClient();
 
-        // Just expect some error logging
+        // After optimization: critical logging and exception throwing
         $this->mockLogger->expects($this->atLeastOnce())
-            ->method('error');
+            ->method('critical');
 
         $this->repository = new NBPCurrencyRepository($httpClient, $this->mockConfig, $this->mockLogger);
-        $result = $this->repository->getCurrentRates();
-
-        $this->assertEmpty($result);
+        
+        // Complete failure now throws exception for graceful handling
+        $this->expectException(\RuntimeException::class);
+        $this->repository->getCurrentRates();
     }
 
     public function testCurrencyCodeNormalization(): void

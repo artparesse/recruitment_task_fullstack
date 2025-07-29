@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Service\CachedCurrencyRateService;
+use App\Service\CurrencyRateService;
 use App\Service\ConfigurationService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,22 +18,19 @@ class CurrencyWarmupCommand extends Command
     protected static $defaultName = 'currency:warmup';
     protected static $defaultDescription = 'Warm up currency cache by pre-loading rates from NBP API';
 
-    private CachedCurrencyRateService $cachedCurrencyService;
+    private CurrencyRateService $currencyService;
     private ConfigurationService $config;
     private CacheInterface $nbpApiCache;
-    private CacheInterface $currencyCache;
 
     public function __construct(
-        CachedCurrencyRateService $cachedCurrencyService,
+        CurrencyRateService $currencyService,
         ConfigurationService $config,
-        CacheInterface $nbpApiCache,
-        CacheInterface $currencyCache
+        CacheInterface $nbpApiCache
     ) {
         parent::__construct();
-        $this->cachedCurrencyService = $cachedCurrencyService;
+        $this->currencyService = $currencyService;
         $this->config = $config;
         $this->nbpApiCache = $nbpApiCache;
-        $this->currencyCache = $currencyCache;
     }
 
     protected function configure(): void
@@ -50,7 +47,7 @@ class CurrencyWarmupCommand extends Command
                 'pool',
                 'p',
                 InputOption::VALUE_OPTIONAL,
-                'Specific cache pool to warm up (nbp_api, currency, or all)',
+                'Specific cache pool to warm up (nbp_api or all)',
                 'all'
             )
             ->setHelp(
@@ -69,7 +66,7 @@ class CurrencyWarmupCommand extends Command
         $force = $input->getOption('force');
         $pool = $input->getOption('pool');
 
-        $io->title('Currency Cache Warmup');
+        $io->title('Currency Cache Warmup - Simplified Architecture');
 
         if ($force) {
             $io->section('Clearing existing cache...');
@@ -93,12 +90,12 @@ class CurrencyWarmupCommand extends Command
                 $io->text(sprintf('✓ Configuration loaded: %d currencies', count($supportedCurrencies)));
             }
 
-            // Warm up NBP API cache and currency calculations
-            if ($pool === 'all' || $pool === 'nbp_api' || $pool === 'currency') {
+            // Warm up NBP API cache (simplified - only one level)
+            if ($pool === 'all' || $pool === 'nbp_api') {
                 $io->text('Fetching current rates from NBP API...');
 
                 try {
-                    $rates = $this->cachedCurrencyService->getCurrentRates();
+                    $rates = $this->currencyService->getCurrentRates();
                     $stats['currency_calculations'] = count($rates);
                     $stats['nbp_api_calls'] = 1; // One call for all currencies via tables endpoint
 
@@ -111,9 +108,9 @@ class CurrencyWarmupCommand extends Command
                             array_map(function ($rate) {
                                 return [
                                     $rate['currency'],
-                                    number_format($rate['base'], 4),
-                                    $rate['buy'] ? number_format($rate['buy'], 4) : 'N/A',
-                                    number_format($rate['sell'], 4)
+                                    number_format($rate['baseRate'], 4),
+                                    $rate['buyRate'] ? number_format($rate['buyRate'], 4) : 'N/A',
+                                    number_format($rate['sellRate'], 4)
                                 ];
                             }, $rates)
                         );
@@ -126,7 +123,7 @@ class CurrencyWarmupCommand extends Command
 
                 // Warm up available currencies cache
                 try {
-                    $availableCurrencies = $this->cachedCurrencyService->getAvailableCurrencies();
+                    $availableCurrencies = $this->currencyService->getAvailableCurrencies();
                     $io->text(sprintf('✓ Available currencies cached: %d currencies', count($availableCurrencies)));
                 } catch (\Exception $e) {
                     $stats['errors'][] = 'Available currencies: ' . $e->getMessage();
@@ -143,7 +140,8 @@ class CurrencyWarmupCommand extends Command
                 ['Duration' => $duration . ' ms'],
                 ['NBP API Calls' => $stats['nbp_api_calls']],
                 ['Currency Calculations' => $stats['currency_calculations']],
-                ['Errors' => count($stats['errors'])]
+                ['Errors' => count($stats['errors'])],
+                ['Architecture' => 'Simplified (Repository-level cache only)']
             );
 
             if (!empty($stats['errors'])) {
@@ -165,7 +163,7 @@ class CurrencyWarmupCommand extends Command
 
     private function clearCache(string $pool, SymfonyStyle $io): void
     {
-                try {
+        try {
             if ($pool === 'all' || $pool === 'nbp_api') {
                 // Clear specific cache keys rather than entire pool
                 $today = date('Y-m-d');
@@ -173,14 +171,7 @@ class CurrencyWarmupCommand extends Command
                 $this->nbpApiCache->delete("nbp_table_a_{$today}");
                 $io->text('✓ NBP API cache cleared');
             }
-            
-            if ($pool === 'all' || $pool === 'currency') {
-                $today = date('Y-m-d');
-                $this->currencyCache->delete("currency_rates_{$today}");
-                $this->currencyCache->delete("available_currencies_" . date('Y-m-d_H'));
-                $io->text('✓ Currency cache cleared');
-            }
-            
+
         } catch (\Exception $e) {
             $io->warning('Failed to clear some cache pools: ' . $e->getMessage());
         }
