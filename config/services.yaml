@@ -26,5 +26,57 @@ services:
         autowire: true
         tags: ['controller.service_arguments']
 
+    # Currency Application Services
+    App\Service\ConfigurationService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    # Date helper service for business day calculations
+    App\Service\DateHelperService: ~
+
+    # Currency Rate Service with date helper
+    App\Service\CurrencyRateService:
+        arguments:
+            $currencyRepository: '@App\Repository\CurrencyRepositoryInterface'
+            $config: '@App\Service\ConfigurationService'
+            $dateHelper: '@App\Service\DateHelperService'
+
+    # Repository pattern for NBP API
+    App\Repository\CurrencyRepositoryInterface:
+        alias: App\Repository\CachedNBPCurrencyRepository
+
+    # NBP API HTTP Client - simplified configuration (no base_uri needed)
+    app.http_client.nbp:
+        class: GuzzleHttp\Client
+        arguments:
+            - verify: false
+              timeout: 10
+              headers:
+                User-Agent: 'Currency-Exchange-App/1.0'
+                Accept: 'application/json'
+
+    # Base NBP Repository (without cache)
+    App\Repository\NBPCurrencyRepository:
+        arguments:
+            $httpClient: '@app.http_client.nbp'
+
+    # Cached NBP Repository with decorator pattern
+    App\Repository\CachedNBPCurrencyRepository:
+        arguments:
+            $repository: '@App\Repository\NBPCurrencyRepository'
+            $nbpApiCache: '@nbp_api.cache'
+
+    # REMOVED: Cached Currency Rate Service - simplified architecture
+    # Now using only Repository-level caching for better performance
+
+    # Console Command for cache warmup (simplified)
+    App\Command\CurrencyWarmupCommand:
+        arguments:
+            $currencyService: '@App\Service\CurrencyRateService'
+            $config: '@App\Service\ConfigurationService'
+            $nbpApiCache: '@nbp_api.cache'
+        tags:
+            - { name: 'console.command' }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

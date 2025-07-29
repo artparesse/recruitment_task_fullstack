@@ -1,23 +1,25 @@
 /*
  * Welcome to your app's main JavaScript file!
  *
- * We recommend including the built version of this JavaScript file
- * (and its CSS file) in your base layout (base.html.twig).
+ * This file bootstraps the React application and mounts it to the DOM.
  */
 
-// any CSS you import will output into a single css file (app.css in this case)
-//import './css/app.css';
+// Import CSS styles
+import '../css/app.css';
 
-// start the Stimulus application
-//import './bootstrap';
-
-
-
+// Import React and ReactDOM
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router } from 'react-router-dom';
-import '../css/app.css';
-import Home from './components/Home';
 
-ReactDOM.render(<Router><Home /></Router>, document.getElementById('root'));
+// Import main App component
+import App from './components/App';
+
+// Mount React application to the DOM
+const rootElement = document.getElementById('app');
+
+if (rootElement) {
+    ReactDOM.render(<App />, rootElement);
+} else {
+    console.error('Nie można znaleźć elementu o id "app" do zamontowania aplikacji React');
+}
 

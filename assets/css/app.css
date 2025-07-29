@@ -1,3 +1,101 @@
+/* Import layout styles */
+@import './layout/header.css';
+
+/* Import component styles */
+@import './components/tables.css';
+@import './components/forms.css';
+@import './components/pages.css';
+
+/* Import utility styles */
+@import './utilities/utilities.css';
+
+/* ==============================
+   CONTAINER
+   ============================== */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Base application styles */
+* {
+    box-sizing: border-box;
+}
+
 body {
-    background-color: lightgray;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #f8f9fa;
+    color: #2c3e50;
+    line-height: 1.6;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Coming soon and 404 pages */
+.coming-soon, .not-found {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.coming-soon h1,
+.not-found h1 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.coming-soon p,
+.not-found p {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Focus styles for accessibility */
+:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .header, .footer, .refresh-button, .search-button, .back-button {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none;
+        padding: 0;
+    }
+    
+    body {
+        background: white;
+    }
+    
+    .currency-table {
+        font-size: 12px;
+    }
+    
+    .currency-table th,
+    .currency-table td {
+        padding: 0.5rem;
+    }
 }

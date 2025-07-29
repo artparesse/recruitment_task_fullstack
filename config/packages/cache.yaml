@@ -15,5 +15,18 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Currency data cache pool
+            currency.cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600  # 1 hour TTL for currency data
+                
+            # NBP API responses cache  
+            nbp_api.cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600  # 1 hour TTL for NBP responses
+                
+            # Configuration cache (longer TTL)
+            config.cache:
+                adapter: cache.adapter.filesystem  
+                default_lifetime: 7200  # 2 hours TTL for YAML config
